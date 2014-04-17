@@ -1,0 +1,44 @@
+<div class="jumbotron text-center">
+	
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">ISM Sniffer</h3>
+        </div>
+
+        <div class="panel-body">
+        	<div class="row">
+				<div class="col-lg-2">
+					<div class="input-group">
+        				<span class="input-group-addon">Port</span>
+        				<input type="text" class="form-control" ng-model="config.port" ng-disabled="true">
+    				</div>
+        		</div>
+        		<div class="col-lg-3 pull-right">
+        			<button type="button" class="btn btn-primary" ng-click="doClear()">
+						<div><span class="glyphicon glyphicon-minus"></span> Clear</div>
+					</button>
+        		 	<button type="button" class="btn btn-primary" ng-click="doConnect()">
+	                    <div ng-show="!connected"><span class="glyphicon glyphicon-ok"></span> Connect</div>
+	                    <div ng-show ="connected"><span class="glyphicon glyphicon-remove"></span> Disconnect</div>
+	                </button>
+        		</div>
+            </div> <!-- /.row -->
+            <br>
+            <textarea scroll-glue class="form-control" rows="25" ng-model="sniffer" ng-disabled="true" ></textarea>
+            <!-- <div class="row" >
+            	<div ng-repeat="packet in dataset.rx">{{packet.toString()}}</div>
+            	<div ng-repeat="rssi in dataset.rssi">{{rssi}}</div>
+            </div> -->
+            <!-- <smoothie
+        		listen-to="rssi"
+        		height="400px"
+        		width="800px"
+        		stroke-style="#ff0000"
+        		fill-style="rgba(255, 0, 0, 0.4)">
+    		</smoothie> -->
+    		<canvas id="rssi_chart" width="800" height="100"></canvas>
+        </div>
+
+        <div class="panel-footer">{{footer}}</div>
+    </div>
+</div>

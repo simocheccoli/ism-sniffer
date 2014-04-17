@@ -1,0 +1,49 @@
+{
+  "name": "ism-sniffer",
+  "version": "0.0.1",
+  "description": "Application to sniff ISM packets and log them",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "grunt",
+    "postinstall": "bower install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rosterloh/ism-sniffer.git"
+  },
+  "keywords": [
+    "angular",
+    "socket.io",
+    "serial"
+  ],
+  "author": "Richard Osterloh",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rosterloh/ism-sniffer/issues"
+  },
+  "homepage": "https://github.com/rosterloh/ism-sniffer",
+  "dependencies": {
+    "forever": "^0.10.11",
+    "lodash": "^2.4.1",
+    "socket.io": "^0.9.16",
+    "serialport": "^1.4.0",
+    "express": "^4.0.0",
+    "winston": "^0.7.3",
+    "smoothie": "^1.20.0"
+  },
+  "devDependencies": {
+    "grunt-concurrent": "latest",
+    "grunt-contrib-csslint": "latest",
+    "grunt-contrib-cssmin": "latest",
+    "grunt-contrib-jshint": "latest",
+    "grunt-contrib-uglify": "latest",
+    "grunt-contrib-copy": "latest",
+    "grunt-contrib-clean": "latest",
+    "jshint-stylish": "latest",
+    "grunt-contrib-watch": "latest",
+    "grunt-nodemon": "latest",
+    "load-grunt-tasks": "latest",
+    "time-grunt": "latest"
+  }
+}
