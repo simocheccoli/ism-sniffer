@@ -1,13 +1,16 @@
 'use strict';
 
-var express   	= require('express');
-var app         = express();
-var http 		= require('http').createServer(app);
-var port    	= process.env.PORT || 8080;
-var socketio    = require('socket.io');
-var SerialPort	= require('serialport').SerialPort; // localize object constructor
-var logger		= require('./logger');
-var _ 			= require('lodash');
+var express   	 = require('express');
+var app          = express();
+var http 		 = require('http').createServer(app);
+var port    	 = process.env.PORT || 8080;
+var socketio     = require('socket.io');
+var SerialPort	 = require('serialport').SerialPort; // localize object constructor
+var logger		 = require('./logger');
+var _ 			 = require('lodash');
+var commandTypes = require('./constants').commandTypes;
+var mongoose     = require('mongoose');
+var Packet       = require('./models/packet');
 
 var socketServer;
 var serialPort;
@@ -62,37 +65,6 @@ function initSocketIO(httpServer,debug)
     });
 }
 
-var commandTypes = {
-    0x11: 'WB_PROTOCOL_CMD_Periodic',
-    0x12: 'WB_PROTOCOL_CMD_Report',
-    0x13: 'WB_PROTOCOL_CMD_Activity_Log_Data',
-    0x14: 'WB_PROTOCOL_CMD_Rcvd_data_block_Ack',
-    0x15: 'WB_PROTOCOL_CMD_Return_OTA_FW_CRC',
-    0x16: 'WB_PROTOCOL_CMD_Return_FW_Version',
-
-    0xA0: 'CLIP_PROTOCOL_CMD_ACK_and_Time_Update',
-    0xA1: 'CLIP_PROTOCOL_CMD_Set_TX_Period',
-    0xA2: 'CLIP_PROTOCOL_CMD_Request_Report',
-    0xA3: 'CLIP_PROTOCOL_CMD_ACK_and_Request_Next_Report',
-    0xA4: 'CLIP_PROTOCOL_CMD_ACK_Received_Report',
-    0xA5: 'CLIP_PROTOCOL_CMD_Request_WB_FW_Version',
-    0xA6: 'CLIP_PROTOCOL_CMD_ACK_and_Battery_Info',
-
-    0xB0: 'CLIP_PROTOCOL_CMD_OTA_Upgrade_Start',
-    0xB1: 'CLIP_PROTOCOL_CMD_Flash_Write',
-    0xB2: 'CLIP_PROTOCOL_CMD_Check_FW_CRC',
-    0xB3: 'CLIP_PROTOCOL_CMD_Activate_New_FW',
-
-    0xC0: 'CLIP_PROTOCOL_CMD_DOCK_REPEAT_UP',
-    0xC1: 'CLIP_PROTOCOL_CMD_DOCK_REPEAT_DOWN',
-
-    0xD0: 'DOCK_PROTOCOL_CMD_Dock_Status',
-    0xD1: 'DOCK_PROTOCOL_CMD_OTA_Upgrade_Start',
-    0xD2: 'DOCK_PROTOCOL_CMD_Flash_Write',
-    0xD3: 'DOCK_PROTOCOL_CMD_Activate_New_FW',
-    0xD7: 'DOCK_PROTOCOL_CMD_Return_FW_Write_Ack'
-};
-
 function serialListener()
 {
     var tempBuffer = new Buffer(50);
@@ -131,7 +103,7 @@ function serialListener()
                 dataIn = buffer.length;
             } else if (buffer[buffer.length-1] === 10) {
                 if(dataIn > 0) {
-                    logger.debug('Copying '+buffer.length+' bytes at '+dataIn);
+                    logger.trace('Copying '+buffer.length+' bytes at '+dataIn);
                     buffer.copy(tempBuffer, dataIn);
                     dataIn += buffer.length;
                     if((dataIn > 23) && (dataIn%23 === 0)) { // overlapping packets ?
@@ -146,8 +118,10 @@ function serialListener()
                     logger.debug('Errr....not sure '+buffer.length);
                 }
                 dataIn = 0;
-            } else {
-                logger.debug(buffer.length+' packet. Not sure. '+buffer.toString());
+            } else { // some sort of short middle of a packet
+                logger.debug(buffer.length+' packet. Not sure. Copying '+buffer.toString()+' bytes');
+                buffer.copy(tempBuffer, dataIn);
+                dataIn += buffer.length;
             }
         }
     };
@@ -183,50 +157,46 @@ function serialListener()
 	});
 
 	serialPort.on('data', function(data) {
-		// logger.trace(data.replace(/\./g, ''));
-		var packet = {
-            systick: 0,
-            size: 0,
-            command: 0,
-            payload: new Buffer(50)
-    		//payload: [],
-    	};
+		var packet = new Packet();
         /*
-    	_.each(data.split(' '), function(item) {
-    		if(item.match(/pct:/)) {
-    			packet.rx.push(parseInt(item.substr(4,5), 16));
-    		}
-    		else if(item.length === 2) {
-    			packet.rx.push(parseInt(item, 16));
-    		}
-    		else if(item.match(/-[0-9][0-9][0-9]dBm/)) {
-    			packet.rssi = parseInt(item.substr(0,4));
-    		}
-    	});
-
-    	if(packet.rx.length > 1) {
-    		socketServer.sockets.emit('serial:data', packet);
-    		//logger.info(packet);
-    	} else {
-    		logger.trace('Skipping empty packet ' + data);
-    	}
-    	*/
-
+         *  <TIME>       5        Sniffer ticks and space   5
+         *  <LENGTH>     1        Packet length             1
+         *  <CMD>        1        Command type              1
+         *  <IMEI>       8        Hardware ID               1  <SECURITY>
+         *  <SIGNATURE>  2        0x55 0xAA                 8  <WB_ID><UNUSED>
+         *  <PAYLOAD>    5/21/37  Depends on command type
+         */
     	if(data[4] === 32) { //space
             // data[0:3] = 29 68 00 00 => timestamp: 0x00006829 in systicks
             packet.systick = data[0]+Math.pow(16,2)*data[1]+Math.pow(16,4)*data[2]+Math.pow(16,8)*data[3];
             packet.size = data.readUInt8(5);
-            var total = 6+packet.size+1; // 4 bytes time, space, size, \n
-            if((data[total-1] === 10)) { //LF
+            var total = 6+packet.size; // 4 bytes time, space, size, \n
+            if((data[total] === 10)) { //LF
                 packet.command = data.readUInt8(6);
-                data.copy(packet.payload, 0, 7, total-1); // buf.copy(targetBuffer, [targetStart], [sourceStart], [sourceEnd])
-                if(commandTypes[packet.command] === undefined) {
-                    logger.warn('['+packet.systick+'] new command type '+packet.command);
+
+                if((data[15] === 85) && (data[16] === 170)) {
+                    packet.product = 'Colorado';
+                    packet.hardware = data.readUInt32LE(7, true) + Math.pow(2,32)*data.readUInt32LE(11, true); // 64bits LSB First
+                    packet.payload = data.slice(17, total);
                 } else {
-                    logger.info('['+packet.systick+'] '+commandTypes[packet.command]+' '+packet.payload[0]+' '+packet.payload[1]+' '+packet.payload[2]+' '+packet.payload[3]+' '+packet.payload[4]+'...'+packet.payload[packet.size-1]);
+                    packet.product = 'Click';
+                    packet.hardware = data.readUInt32LE(8, true); // WB_ID
+                    packet.payload = data.slice(16, total);
                 }
+
+                //data.copy(packet.payload, 0, 7, total); // buf.copy(targetBuffer, [targetStart], [sourceStart], [sourceEnd])
+                packet.save(function(err) {
+                    if(err)
+                        logger.warn('Error inserting packet into database');
+
+                    if(commandTypes[packet.command] === undefined) {
+                        logger.warn('['+packet.systick+'] new command type '+packet.command);
+                    } else {
+                        logger.info('['+packet.systick+'] '+commandTypes[packet.command]+' '+packet.hardware+' '+packet.payload.length);
+                    }
+                });
             } else {
-                logger.warn('Not terminated at '+packet.systick+' with '+packet.size+' byte payload ending in '+data[total-1]);
+                logger.warn('Not terminated at '+packet.systick+' with '+packet.size+' byte payload ending in '+data[total]);
             }
         } else {
             logger.warn('bad');
@@ -248,6 +218,8 @@ function startServer(debug)
 
 	http.listen(port);
 	logger.info('Server started on port ' + port);
+
+    mongoose.connect('mongodb://localhost/buddi');
 
 	serialListener();
 	initSocketIO(http,debug);
