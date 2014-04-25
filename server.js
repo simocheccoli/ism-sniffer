@@ -121,16 +121,21 @@ function serialListener()
                 dataIn = buffer.length;
             } else if (buffer[buffer.length-1] === 10) {
                 if(dataIn > 0) {
-                    logger.trace('Copying '+buffer.length+' bytes at '+dataIn);
-                    buffer.copy(tempBuffer, dataIn);
-                    dataIn += buffer.length;
-                    if((dataIn > 23) && (dataIn%23 === 0)) { // overlapping packets ?
-                        logger.debug('Joined packets. Splitting into '+dataIn/23);
-                        _.each(_.range(dataIn/23), function(item) {
-                            emitter.emit('data', tempBuffer.slice(item*23,(item+1)*23));
-                        });
+                    if((dataIn + buffer.length) < tempBuffer.length) {
+                        logger.trace('Copying '+buffer.length+' bytes at '+dataIn);
+                        buffer.copy(tempBuffer, dataIn);
+                        dataIn += buffer.length;
+                        if((dataIn > 23) && (dataIn%23 === 0)) { // overlapping packets ?
+                            logger.debug('Joined packets. Splitting into '+dataIn/23);
+                            _.each(_.range(dataIn/23), function(item) {
+                                emitter.emit('data', tempBuffer.slice(item*23,(item+1)*23));
+                            });
+                        } else {
+                            emitter.emit('data', tempBuffer);
+                        }
                     } else {
-                        emitter.emit('data', tempBuffer);
+                        logger.warn('Preventing overflow. Packets dropped.');
+                        dataIn = 0;
                     }
                 } else {
                     logger.debug('Errr....not sure '+buffer.length);
@@ -138,8 +143,13 @@ function serialListener()
                 dataIn = 0;
             } else { // some sort of short middle of a packet
                 logger.debug(buffer.length+' packet. Not sure. Copying.');
-                buffer.copy(tempBuffer, dataIn);
-                dataIn += buffer.length;
+                if((dataIn + buffer.length) < tempBuffer.length) {
+                    buffer.copy(tempBuffer, dataIn);
+                    dataIn += buffer.length;
+                } else {
+                    logger.warn('Preventing overflow. Packets dropped.');
+                    dataIn = 0;
+                }
             }
         }
     };

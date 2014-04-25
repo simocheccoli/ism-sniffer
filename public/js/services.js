@@ -12,13 +12,14 @@ angular.module('snifferApp.services', []).
 		return mySocket;
 		//return socketFactory();
 	}]).
+	constant('_', window._).
 	factory('config', ['socket', function(socket) {
 		var config = {
 			ports: [],
 			port: 'COM6',
 			bauds: [500000, 230400, 115200, 57600, 38400, 19200, 9600, 4800, 2400, 1800, 1200, 600, 300, 200, 150, 134, 110, 75, 50],
 			baud: null,
-			bands: ['915', '903', '868', '433.5', '868.3', '315'],
+			bands: [{index: 0x01, name:'EU_CLIP'}, {index:0x02, name:'US_CLIP'}, {index:0x03, name:'EU_TAG'}, {index:0x04, name:'US_TAG'}],
 			band: null,
 
 			setDefaults: function() {

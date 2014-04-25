@@ -27,11 +27,15 @@ angular.module('snifferApp.controllers', []).
             }
         };
 
+        $scope.showData = function(index) {
+        	console.log(index+' clicked. '+JSON.stringify($scope.dataset[index]));
+        }
+
         socket.on('serial:data', function(data) {
         	if(!$scope.connected)
         		$scope.connected = true;
 
-        	if(data.command !== 0) {
+        	if(data.command !== 0) { // ignore these for now
 	        	var found = false;
 	        	angular.forEach($scope.dataset, function(value, key) {
 	        		if(data.hardware === value.hardware) { // update

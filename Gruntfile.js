@@ -86,7 +86,7 @@ module.exports = function(grunt) {
                 },
                 files: {
                     'public/build/app.min.css': [
-                        'public/lib/bootstrap/dist/css/bootstrap.css',
+                        //'public/lib/bootstrap/dist/css/bootstrap.css',
 						'public/css/**/*.css'
                     ]
                 }
