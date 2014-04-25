@@ -14,7 +14,7 @@
   <script src="lib/angular-bootstrap/ui-bootstrap.min.js"></script>
   <script src="lib/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>-->
   <!-- CDN Files -->
-  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.0-beta.5/angular.min.js"></script>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.0-beta.6/angular.min.js"></script>
   <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-router/0.2.10/angular-ui-router.min.js"></script>
   <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.10.0/ui-bootstrap.min.js"></script>
   <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.10.0/ui-bootstrap-tpls.min.js"></script>
@@ -31,13 +31,15 @@
     </div>
     <ul class="nav navbar-nav">
       <li><a ui-sref="config">Config</a></li>
+      <li><a ui-sref="data">Status</a></li>
     </ul>
+    <div class="pull-right text-muted">App: v<span app-version></span></div>
   </nav>
   <div class="container">
     <!-- ANGULAR DYNAMIC CONTENT -->
     <div ui-view></div>
 
-    <div>App: v<span app-version></span></div>
+
   </div>
 </body>
 </html>

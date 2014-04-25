@@ -64,7 +64,7 @@ module.exports = function(grunt) {
 						//'public/lib/angular-bootstrap/ui-bootstrap-tpls.js',
                         //'node_modules/socket.io/lib/socket.io.js',
                         //'public/lib/smoothie.js',
-                        //'public/lib/angular-socket-io/socket.js',
+                        'public/lib/angular-socket-io/socket.js',
                         'public/js/**/*.js'
                     ]
                 }

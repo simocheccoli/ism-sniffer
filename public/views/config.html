@@ -1,4 +1,63 @@
-<div class="jumbotron">
- 	<h1>View 2</h1>
- 	<div class="row text-center"></div>
+<div class="jumbotron text-center">
+
+	<div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">Config Settings</h3>
+        </div>
+
+        <div class="panel-body">
+        	<div class="row">
+        		<div class="col-lg-3">
+        			<div class="input-group">
+	        			<div class="input-group-btn">
+		                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+		                        Frequency
+		                        <span class="caret"></span>
+		                    </button>
+		                    <ul class="dropdown-menu">
+		                        <li ng-repeat="f in config.bands"><a ng-click="config.band = f">{{f}} MHz</a></li>
+		                    </ul>
+		                </div>
+		                <input type="text" class="form-control" ng-model="config.band" ng-disabled="true">
+	                </div>
+        		</div>
+        		<div class="col-lg-3">
+        			<div class="input-group">
+	        			<div class="input-group-btn">
+		                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+		                        Baudrate
+		                        <span class="caret"></span>
+		                    </button>
+		                    <ul class="dropdown-menu">
+		                        <li ng-repeat="b in config.bauds"><a ng-click="config.baud = b">{{b.toString()}}</a></li>
+		                    </ul>
+		                </div>
+		                <input type="text" class="form-control" ng-model="config.baud" ng-disabled="true">
+	                </div>
+        		</div>
+        		<div class="col-lg-3">
+        			<div class="input-group">
+	        			<div class="input-group-btn">
+		                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+		                        Port
+		                        <span class="caret"></span>
+		                    </button>
+		                    <ul class="dropdown-menu">
+		                        <li ng-repeat="p in ports"><a ng-click="config.port = p">{{p}}</a></li>
+		                    </ul>
+		                </div>
+		                <input type="text" class="form-control" ng-model="config.port" ng-disabled="true">
+	                </div>
+        		</div>
+        		<div class="col-lg-2">
+        			<div class="input-group">
+        				<span class="input-group-addon">Port</span>
+        				<input type="text" class="form-control" ng-model="config.port">
+    				</div>
+        		</div>
+            </div> <!-- /.row -->
+        </div>
+
+        <div class="panel-footer">{{footer}}</div>
+    </div>
 </div>

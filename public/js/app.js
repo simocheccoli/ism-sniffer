@@ -4,7 +4,7 @@
 angular.module('snifferApp', [
 	'ui.router',
     'ui.bootstrap',
-	//'btford.socket-io',
+	'btford.socket-io',
 	'snifferApp.filters',
 	'snifferApp.services',
 	'snifferApp.directives',

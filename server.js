@@ -2,24 +2,30 @@
 
 var express   	 = require('express');
 var app          = express();
+var bodyParser   = require('body-parser');
 var http 		 = require('http').createServer(app);
 var port    	 = process.env.PORT || 8080;
 var socketio     = require('socket.io');
-var SerialPort	 = require('serialport').SerialPort; // localize object constructor
+var sp           = require('serialport');
+var SerialPort	 = sp.SerialPort; // localize object constructor
 var logger		 = require('./logger');
 var _ 			 = require('lodash');
 var commandTypes = require('./constants').commandTypes;
+var bandTypes    = require('./constants').bandTypes;
 var mongoose     = require('mongoose');
 var Packet       = require('./models/packet');
+var Command      = require('./models/command');
 
 var socketServer;
 var serialPort;
+var tempBuffer = new Buffer(69); // 3 packets of 23
+var dataIn = 0;
 
 var portStatus = {
 	state: 'closed',
 	baud: 115200,
 	portName: 'COM6',
-	band: 0
+	band: 3
 };
 
 function initSocketIO(httpServer,debug)
@@ -34,42 +40,54 @@ function initSocketIO(httpServer,debug)
 	socketServer.on('connection', function (socket) {
 		logger.info('user connected');
 
-		socketServer.on('serial:open', function(data) {
+		socket.on('serial:open', function(data) {
+            logger.debug('Open request at '+data.baud+' on '+data.port);
 			portStatus.baud = data.baud;
 			portStatus.portName = data.port;
 			serialPort.path = data.port;
 			serialPort.options.baudRate = data.baud;
+            dataIn = 0;
 			serialPort.open();
-			//socket.emit('ok');
+			socket.emit('serial:open:ok', {port: data.port});
 		});
 
 		socket.on('serial:close', function(data) {
+            logger.debug('Close request on '+data.port);
+            dataIn = 0;
 			serialPort.close();
+            socket.emit('serial:close:ok', {port: data.port});
 		});
 
-		socket.on('serial:list', function(data) {
-			serialPort.list(function(err, ports) {
+		socket.on('serial:list', function() {
+			sp.list(function(err, ports) {
 				if(err) {
 					logger.warn('err ' + err);
     			} else {
     				socket.emit('serial:ports', ports);
+                    logger.debug(ports);
     			}
 			});
-			logger.debug(ports);
 		});
 
-		socket.on('serial:band', function(data) {
+		socket.on('serial:band', function() {
 			serialPort.write('$255\r\n');
-			logger.debug('Switch band requested');
+            if(portStatus.band === 4) {
+                portStatus.band = 1;
+            } else {
+                portStatus.band += 1;
+            }
+			logger.debug('Switch to '+bandTypes[portStatus.band]+' band requested');
 		});
+
+        socket.on('disconnect', function () {
+            logger.info('user disconnected');
+        });
     });
 }
 
 function serialListener()
 {
-    var tempBuffer = new Buffer(50);
-    var dataIn = 0;
-
+    /*
     var parsePackets = function(emitter, buffer) {
         if(buffer.length === 23) {
             dataIn = 0;
@@ -92,7 +110,7 @@ function serialListener()
             }
         }
     };
-
+    */
     var parseSmarter = function(emitter, buffer) {
         if((buffer[4] === 32) && (buffer[buffer.length-1] === 10)) {
             emitter.emit('data', buffer);
@@ -119,7 +137,7 @@ function serialListener()
                 }
                 dataIn = 0;
             } else { // some sort of short middle of a packet
-                logger.debug(buffer.length+' packet. Not sure. Copying '+buffer.toString()+' bytes');
+                logger.debug(buffer.length+' packet. Not sure. Copying.');
                 buffer.copy(tempBuffer, dataIn);
                 dataIn += buffer.length;
             }
@@ -142,7 +160,7 @@ function serialListener()
 			if(portStatus.state !== 'closed') {
 				logger.warn('Port already open');
 			} else {
-				logger.info(portStatus.portName + ' open serial communication');
+				logger.info(portStatus.portName + ' open serial communication. Listening on '+bandTypes[portStatus.band]+' band.');
 				portStatus.state = 'open';
 			}
 		}
@@ -173,15 +191,24 @@ function serialListener()
             var total = 6+packet.size; // 4 bytes time, space, size, \n
             if((data[total] === 10)) { //LF
                 packet.command = data.readUInt8(6);
+                packet.rf_band = portStatus.band;
 
-                if((data[15] === 85) && (data[16] === 170)) {
-                    packet.product = 'Colorado';
-                    packet.hardware = data.readUInt32LE(7, true) + Math.pow(2,32)*data.readUInt32LE(11, true); // 64bits LSB First
-                    packet.payload = data.slice(17, total);
+                if(packet.command === 0) { // cmd(1), flags(1), from(4), time(4)
+                    packet.hardware = data.readUInt32LE(8, true);
+                    packet.payload = data.slice(12, total);
                 } else {
-                    packet.product = 'Click';
-                    packet.hardware = data.readUInt32LE(8, true); // WB_ID
-                    packet.payload = data.slice(16, total);
+                    if(portStatus.band>2) { // Colorado
+                        if((data[15] === 85) && (data[16] === 170)) {
+                            packet.hardware = data.readUInt32LE(7, true) + Math.pow(2,32)*data.readUInt32LE(11, true); // 64bits LSB First
+                            packet.payload = data.slice(17, total);
+                        } else {
+                            logger.warn('Checksum not found. Logging as hardware 0.');
+                            packet.payload = data.slice(7, total);
+                        }
+                    } else { // Click
+                        packet.hardware = data.readUInt32LE(8, true); // WB_ID
+                        packet.payload = data.slice(16, total);
+                    }
                 }
 
                 //data.copy(packet.payload, 0, 7, total); // buf.copy(targetBuffer, [targetStart], [sourceStart], [sourceEnd])
@@ -192,8 +219,19 @@ function serialListener()
                     if(commandTypes[packet.command] === undefined) {
                         logger.warn('['+packet.systick+'] new command type '+packet.command);
                     } else {
-                        logger.info('['+packet.systick+'] '+commandTypes[packet.command]+' '+packet.hardware+' '+packet.payload.length);
+                        switch(packet.command) {
+                            case 0:
+                                logger.info('['+packet.systick+'] '+commandTypes[packet.command]);
+                                break;
+                            case 1:
+                                logger.info('['+packet.systick+'] '+commandTypes[packet.command]+' '+packet.hardware+' Status:'+packet.payload[0]+' Period:'+packet.payload[1]+' Battery:'+packet.payload.readUInt16LE(2, true)+'mv Reports:'+packet.payload[4]);
+                                break;
+                            default:
+                                logger.info('['+packet.systick+'] '+commandTypes[packet.command]+' '+packet.hardware+' '+packet.payload.length);
+                                break;
+                        }
                     }
+                    socketServer.sockets.emit('serial:data', packet);
                 });
             } else {
                 logger.warn('Not terminated at '+packet.systick+' with '+packet.size+' byte payload ending in '+data[total]);
@@ -209,12 +247,89 @@ function serialListener()
 		}
 	});
 
-	serialPort.open();
+	//serialPort.open();
 }
 
 function startServer(debug)
 {
 	app.use(express.static(__dirname + '/public'));
+    app.use(bodyParser());
+
+    // ROUTES FOR OUR API
+    // =============================================================================
+    var router = express.Router();              // get an instance of the express Router
+
+    // middleware to use for all requests
+    router.use(function(req, res, next) {
+        // do logging
+        logger.trace('API request');
+        next(); // make sure we go to the next routes and don't stop here
+    });
+
+    // test route to make sure everything is working (accessed at GET http://localhost:8080/api)
+    router.get('/', function(req, res) {
+        res.json({ message: 'Welcome to our api!' });
+    });
+
+    // on routes that end in /command
+    // ----------------------------------------------------
+    router.route('/commands')
+        // create a command (accessed at POST http://localhost:8080/api/commands)
+        .post(function(req, res) {
+            var command = new Command();      // create a new instance of the Command model
+            command.name = req.body.name;     // set the command name (comes from the request)
+            command.type = req.body.type;
+            // save the command and check for errors
+            command.save(function(err) {
+                if (err) { res.send(err); }
+                res.json({ message: 'Command created!' });
+                logger.debug('New command created. ['+command.type+' '+command.name+']');
+            });
+        })
+        // get all the commands (accessed at GET http://localhost:8080/api/commands)
+        .get(function(req, res) {
+            Command.find(function(err, commands) {
+                if (err) { res.send(err); }
+                res.json(commands);
+                logger.debug('All commands sent.');
+            });
+        });
+    // on routes that end in /commands/:command_id
+    // ----------------------------------------------------
+    router.route('/commands/:command_id')
+        // get the command with that id
+        .get(function(req, res) {
+            Command.findById(req.params.command_id, function(err, command) {
+                if (err) { res.send(err); }
+                res.json(command);
+                logger.debug('Command ['+command.type+' '+command.name+'] sent.');
+            });
+        })
+        // update the command with this id
+        .put(function(req, res) {
+            Command.findById(req.params.command_id, function(err, command) {
+                if (err) { res.send(err); }
+                command.name = req.body.name;
+                command.type = req.body.type;
+                command.save(function(err) {
+                    if (err) { res.send(err); }
+                    res.json({ message: 'Command updated!' });
+                    logger.debug('Command ['+command.type+' '+command.name+'] updated.');
+                });
+            });
+        })
+        // delete the command with this id
+        .delete(function(req, res) {
+            Command.remove({
+                _id: req.params.command_id
+            }, function(err, command) {
+                if (err) { res.send(err); }
+                res.json({ message: 'Successfully deleted' });
+                logger.debug('Command ['+command+'] deleted.');
+            });
+        });
+
+    app.use('/api', router);
 
 	http.listen(port);
 	logger.info('Server started on port ' + port);
@@ -225,6 +340,6 @@ function startServer(debug)
 	initSocketIO(http,debug);
 }
 
-startServer(true);
+startServer(false);
 
 exports.start = startServer;

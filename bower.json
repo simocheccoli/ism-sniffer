@@ -1,10 +1,11 @@
 {
     "name": "ism-sniffer",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "dependencies": {
         "angular": "latest",
         "bootstrap": "latest",
         "angular-bootstrap": "latest",
-        "angular-ui-router": "latest"
+        "angular-ui-router": "latest",
+        "angular-socket-io": "latest"
     }
 }

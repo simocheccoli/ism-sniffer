@@ -1,5 +1,5 @@
 <div class="jumbotron text-center">
-	
+
     <div class="panel panel-default">
         <div class="panel-heading">
             <h3 class="panel-title">ISM Sniffer</h3>
@@ -10,7 +10,7 @@
 				<div class="col-lg-2">
 					<div class="input-group">
         				<span class="input-group-addon">Port</span>
-        				<input type="text" class="form-control" ng-model="config.port" ng-disabled="true">
+        				<input type="text" class="form-control" ng-model="config.port" ng-disabled="connected">
     				</div>
         		</div>
         		<div class="col-lg-3 pull-right">
@@ -24,7 +24,42 @@
         		</div>
             </div> <!-- /.row -->
             <br>
-            <textarea scroll-glue class="form-control" rows="25" ng-model="sniffer" ng-disabled="true" ></textarea>
+            <div><span>Devices detected:</span> {{dataset.length}}</div>
+            <br>
+            <div class="row">
+            	<div class="input-group">
+        			<span class="input-group-addon">Search</span>
+        			<input type="text" class="form-control" ng-model="fIMEI">
+    			</div>
+	            <table class="table table-striped table-condensed table-hover">
+	            	<thead>
+	            		<tr>
+	            			<!--<th class="text-center" style="width:10%">#</th>-->
+	            			<th class="text-center" style="width:20%">
+	            				<a class="icon-sort" href="" ng-click="predicate='hardware'; reverse=!reverse">Hardware ID&nbsp;</a>
+	            				<span class="glyphicon glyphicon-sort"></span>
+							</th>
+	            			<th class="text-center" style="width:30%">
+	            				<a href="" ng-click="predicate='logged'; reverse=!reverse">Last Packet&nbsp;</a>
+	            				<span class="glyphicon glyphicon-sort"></span>
+	            			</th>
+	            			<th class="text-center" style="width:10%">Command</th>
+	            			<th class="text-center" style="width:50%">Status</th>
+	            		</tr>
+	            	</thead>
+	            	<tbody ng-repeat="i in dataset | filter:fIMEI | orderBy:predicate:reverse">
+	            		<!-- <tr ng-class-even="'info'"> -->
+	            		<tr>
+	            			<!--<td>{{$index}}</td>-->
+	            			<td>{{i.hardware}}</td>
+	            			<td>{{i.logged | date:'MMM d, y h:mm:ss.sss a'}}</td>
+	            			<td>{{i.command}}</td>
+	            			<td>{{i | packet}}</td>
+	            		</tr>
+	            	</tbody>
+				</table>
+			</div> <!-- /.row -->
+            <!--<textarea scroll-glue class="form-control" rows="25" ng-model="sniffer" ng-disabled="true" ></textarea>-->
             <!-- <div class="row" >
             	<div ng-repeat="packet in dataset.rx">{{packet.toString()}}</div>
             	<div ng-repeat="rssi in dataset.rssi">{{rssi}}</div>
@@ -36,7 +71,7 @@
         		stroke-style="#ff0000"
         		fill-style="rgba(255, 0, 0, 0.4)">
     		</smoothie> -->
-    		<canvas id="rssi_chart" width="800" height="100"></canvas>
+    		<!--<canvas id="rssi_chart" width="800" height="100"></canvas> -->
         </div>
 
         <div class="panel-footer">{{footer}}</div>

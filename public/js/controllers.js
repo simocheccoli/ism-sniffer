@@ -7,31 +7,57 @@ angular.module('snifferApp.controllers', []).
         $scope.footer = 'Press connect to start';
         $scope.connected = false;
 	    $scope.config = config;
-	    $scope.sniffer = '';
-	    //$scope.dataset = [];
-	    
+	    $scope.dataset = [];
+
+	    $scope.$on('socket:error', function (ev, data) {
+	    	console.log('Socket error: '+ev+' : '+data);
+    	});
+
 	    $scope.doClear = function() {
-	    	$scope.sniffer = '';
+	    	$scope.dataset.length = 0;
 	    };
 
         $scope.doConnect = function() {
-            $scope.connected = !$scope.connected;
-            if($scope.connected) {
-            	socket.emit('ism:connect', config.port);
-            	$scope.footer = 'Device connected to ' + config.port;
+            if(!$scope.connected) {
+            	console.log('Sending open');
+            	socket.emit('serial:open', { baud: config.baud, port: config.port});
             } else {
-            	socket.emit('ism:disconnect', config.port);
-            	$scope.footer = 'Press connect to start';
+            	console.log('Sending close');
+            	socket.emit('serial:close', { port: config.port });
             }
         };
 
         socket.on('serial:data', function(data) {
-        	$scope.sniffer += data.rx + '\n';
-        	//$scope.dataset.push(data.rssi);
-        	$scope.time.append(new Date().getTime(), data.rssi);
-        	//$scope.$digest();
+        	if(!$scope.connected)
+        		$scope.connected = true;
+
+        	if(data.command !== 0) {
+	        	var found = false;
+	        	angular.forEach($scope.dataset, function(value, key) {
+	        		if(data.hardware === value.hardware) { // update
+	        			console.log('Update '+data.hardware);
+	        			angular.copy(data, value);
+	        			found = true;
+	        		}
+				});
+	        	if(!found) { // add
+	        		console.log('Add '+data.hardware);
+	        		$scope.dataset.push(data);
+	        	}
+	        }
+        	//$scope.time.append(new Date().getTime(), data.rssi);
         });
-        
+        socket.on('serial:close:ok', function(data) {
+        	$scope.connected = false;
+        	$scope.footer = 'Press connect to start';
+        	console.log(data.port+' closed ok');
+        });
+        socket.on('serial:open:ok', function(data) {
+        	$scope.connected = true;
+        	$scope.footer = 'Device connected to ' + config.port;
+        	console.log(data.port+' opened ok');
+        });
+        /*
         $scope.smoothie = new SmoothieChart();
         $scope.time = new TimeSeries();
         //setInterval(function() {
@@ -42,11 +68,22 @@ angular.module('snifferApp.controllers', []).
 			strokeStyle: '#ff0000',
 			fillStyle: 'rgba(255, 0, 0, 0.4)',
 			lineWidth: 2
-		});
+		});*/
     }]).
     controller('ConfigController', ['$scope', function($scope) {
-    
+    	$scope.footer = 'Change me';
     }]).
-	controller('DataController', [function() {
+	controller('DataController', ['$scope', 'socket', function($scope, socket) {
+		$scope.footer = 'Enter device number to query';
+		$scope.charge = false;
+		$scope.left = false;
+		$scope.right = false;
 
+		$scope.getStatus = function() {
+			socket.emit('device:get', $scope.imei);
+		};
+
+		socket.on('device:status', function(data) {
+
+		});
 	}]);

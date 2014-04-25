@@ -12,10 +12,11 @@ var mongoose = require('mongoose'),
  */
 var PacketSchema = new Schema({
     systick  : { type: Number, default: 0 },
-    logged   : { type: Date, default: Date.now },
+    logged   : { type: Date,   default: Date.now },
     size     : { type: Number, default: 0 },
     command  : { type: Number, default: 0 },
     hardware : { type: Number, default: 0 },
+    rf_band  : { type: Number, default: 0 },
     product  : { type: String, default: '' },
     payload  : Buffer
 });

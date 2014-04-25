@@ -1,6 +1,6 @@
 {
   "name": "ism-sniffer",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Application to sniff ISM packets and log them",
   "main": "server.js",
   "scripts": {
@@ -31,7 +31,8 @@
     "express": "^4.0.0",
     "winston": "^0.7.3",
     "smoothie": "^1.23.0",
-    "mongoose": "^3.8.8"
+    "mongoose": "^3.8.8",
+    "body-parser": "^1.0.2"
   },
   "devDependencies": {
     "grunt-concurrent": "latest",

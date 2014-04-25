@@ -81,3 +81,12 @@ _.each(commandTypes, function(value, key) {
     });
 });
 */
+
+var bandTypes = {
+    0x01: 'EU_CLIP',
+    0x02: 'US_CLIP',
+    0x03: 'EU_TAG',
+    0x04: 'US_TAG'
+};
+
+exports.bandTypes = bandTypes;
