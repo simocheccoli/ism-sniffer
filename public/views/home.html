@@ -7,10 +7,20 @@
 
         <div class="panel-body">
         	<div class="row">
-				<div class="col-lg-2">
+				<div class="col-lg-3">
 					<div class="input-group">
-        				<span class="input-group-addon">Port</span>
-        				<input type="text" class="form-control" ng-model="config.port" ng-disabled="connected">
+					<div class="input-group-btn">
+		                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+		                        Port
+		                        <span class="caret"></span>
+		                    </button>
+		                    <ul class="dropdown-menu">
+		                        <li ng-repeat="p in config.ports"><a ng-click="config.port = p">{{p}}</a></li>
+		                    </ul>
+		                </div>
+		                <input type="text" class="form-control" ng-model="config.port" disabled>
+        				<!-- <span class="input-group-addon">Port</span>
+        				<input type="text" class="form-control" ng-model="config.port" ng-disabled="connected"> -->
     				</div>
         		</div>
         		<div class="col-lg-3">
@@ -58,7 +68,8 @@
             	<div class="col-lg-4">
             		<div class="input-group">
         				<span class="input-group-addon">Search</span>
-        				<input type="text" class="form-control" ng-model="fIMEI">
+        				<!-- <input type="text" class="form-control" ng-model="fIMEI"> -->
+        				<input type="text" ng-model="fIMEI" placeholder="Search string" typeahead="state as state.hardware for state in dataset | filter:{hardware:$viewValue} | limitTo:10" class="form-control">
     				</div>
 				</div>
 				<div class="col-lg-4">
@@ -89,9 +100,8 @@
 	            			<th class="text-center" style="width:50%">Status</th>
 	            		</tr>
 	            	</thead>
-	            	<tbody ng-repeat="i in dataset | filter:fIMEI | orderBy:predicate:reverse" ng-click="showData($index)">
-	            		<!-- <tr ng-class-even="'info'"> -->
-	            		<tr>
+	            	<tbody ng-repeat="i in dataset | filter:fIMEI | orderBy:predicate:reverse | limitTo:20" ng-click="showData($index)">
+	            		<tr ng-class-even="'default'">
 	            			<td>{{i.hardware}}</td>
 	            			<td>{{i.logged | date:'MMM d, y h:mm:ss.sss a'}}</td>
 	            			<td>{{i.command}}</td>

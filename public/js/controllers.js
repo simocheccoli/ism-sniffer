@@ -29,7 +29,7 @@ angular.module('snifferApp.controllers', []).
 
         $scope.showData = function(index) {
         	console.log(index+' clicked. '+JSON.stringify($scope.dataset[index]));
-        }
+        };
 
         socket.on('serial:data', function(data) {
         	if(!$scope.connected)
