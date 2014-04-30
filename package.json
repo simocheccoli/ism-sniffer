@@ -1,6 +1,6 @@
 {
   "name": "ism-sniffer",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Application to sniff ISM packets and log them",
   "main": "server.js",
   "scripts": {

@@ -6,6 +6,7 @@ var config      	= require('./config');
 //var serialListner 	= require('./server').serialListner;
 var serialListner 	= require('./serial');
 var socketio    	= require('socket.io');
+var Packet          = require('./models/packet');
 
 var SocketServer = function(httpServer) {
 	var users = [];
@@ -32,7 +33,9 @@ var SocketServer = function(httpServer) {
 			serialListner.serialPort.path = data.port;
 			serialListner.serialPort.options.baudRate = data.baud;
             serialListner.serialPort.open();
-			socket.emit('serial:open:ok', {port: data.port});
+            if(config.device.state === 'open') {
+			    socket.emit('serial:open:ok', {port: data.port});
+            }
 		});
 
 		socket.on('serial:close', function(data) {
@@ -52,6 +55,21 @@ var SocketServer = function(httpServer) {
             config.device.portName = data.port;
             config.device.band = data.band;
             logger.debug('Config updated: '+JSON.stringify(data));
+        });
+
+        socket.on('packets:get', function(data) {
+            logger.debug('Packets from '+data.hardware+' requested');
+            var search = {hardware: data.hardware};
+            if(data.hide) {
+                search.command = { $gt: 1 };
+            }
+            Packet.find(search, function(err, packets) {
+                if (err) {
+                    logger.warn('Error fetching packets: '+err);
+                    socket.emit('packets:error', err);
+                }
+                socket.emit('packets', packets);
+            });
         });
 
         socket.on('disconnect', function () {

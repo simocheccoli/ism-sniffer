@@ -18,7 +18,10 @@ angular.module('snifferApp.filters', []).
   			//if(input.payload[0]&128) { out += 'Left strap on'; } else { out += 'Left strap off'; };
   			out += 'Status:'+input.payload[0]+' Period:'+input.payload[1]+' Battery:'+(input.payload[2]+256*input.payload[3])+'mv Reports:'+input.payload[4];
   		} else {
-  			out = 'TBD';
+  			angular.forEach(input.payload, function(value, key) {
+  				out += '0x'+value.toString(16)+' ';
+  			});
+			//out = JSON.stringify(input.payload).toString(16);
   		}
   		return out;
   	};

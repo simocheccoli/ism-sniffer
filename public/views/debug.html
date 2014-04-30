@@ -1,0 +1,80 @@
+<div class="container">
+<!-- <div class="container-fluid">
+<div class="col-lg-10"> -->
+	<div class="jumbotron text-center">
+
+	  <div class="panel panel-default">
+	        <div class="panel-heading">
+	            <h3 class="panel-title">{{header}}</h3>
+	        </div>
+
+	        <div class="panel-body">
+	          <div class="col-lg-6">
+	            <div class="input-group">
+	              <input type="text" ng-model="hardware" typeahead="id for id in hardwares | filter:$viewValue | limitTo:8" class="form-control">
+	              <span class="input-group-btn">
+	                <button class="btn btn-default" type="button" ng-click="addMonitor()">Add</button>
+	              </span>
+	            </div>
+	          </div>
+	          <div class="col-lg-2">
+	          	<button type="button" class="btn btn-primary" ng-click="paused=!paused">
+		          <div ng-show="!paused"><span class="glyphicon glyphicon-pause"></span> Pause</div>
+	              <div ng-show ="paused"><span class="glyphicon glyphicon-play"></span> Run</div>
+		        </button>
+	          </div>
+	          <div class="col-lg-2">
+	            <div class="input-group">
+				  <span class="input-group-addon">Store</span>
+				  <input type="text" class="form-control" ng-model="dataLen">
+				</div>
+	          </div>
+	          <div class="top-buffer bottom-buffer">
+	          	<alert ng-repeat="alert in alerts" type="alert.type" close="closeAlert($index)">{{alert.msg}}</alert>
+	          </div>
+	          <br>
+	          <div class="top-buffer">
+	          	<div ng-repeat="m in monitored">
+	          	  <div class="row top-buffer">
+	          	    <div class="col-lg-2" style="background-color: #1c1e22">
+	          		  <h4>{{m.hardware}}</h4>
+	          		</div>
+	          		<div class="col-lg-2 pull-right">
+	          	  	  <span class="input-group-btn">
+	                    <button class="btn btn-default" type="button" ng-click="removeMonitor($index)">Remove</button>
+	              	  </span>
+	              	</div>
+	          	  </div>
+	          	  <div class="row">
+	          	    <table class='table table-striped top-buffer'>
+	                  <thead>
+	                    <tr>
+	                      <th class="text-center">Timestamp</th>
+	                      <th class="text-center">Command</th>
+	                      <th class="text-center">Payload</th>
+	                    </tr>
+	                  </thead>
+	                  <tbody>
+	                    <tr ng-repeat='p in m.data | orderBy:-logged'>
+	                      <td>{{p.logged | date:'MMM d, y h:mm:ss.sss a'}}</td>
+	                      <td>{{p.command}}</td>
+	                      <td>{{p.payload | json}}</td>
+	                    </tr>
+	                  </tbody>
+	                </table>
+	          	  </div>
+	            </div>
+	          </div>
+	        </div>
+
+	        <div class="panel-footer">{{footer}}</div>
+	    </div>
+	</div>
+<!-- </div>
+<div class="col-lg-2">
+	<h3>Detected IDs</h3>
+	<ul ng-repeat="h in hardwares">
+		<li>{{h}}</li>
+	</ul>
+</div> -->
+</div>

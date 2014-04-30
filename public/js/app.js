@@ -23,6 +23,32 @@ angular.module('snifferApp').config(['$stateProvider', '$urlRouterProvider',
                 templateUrl: 'views/home.html',
                 controller: 'MonitorController'
             })
+            .state('home.info', {
+                url: '/info',
+                onEnter: function($stateParams, $state, $modal, $resource) {
+                    $modal.open({
+                        templateUrl: 'views/info.html',
+                        /*resolve: {
+                          item: function() { new Item(123).get(); }
+                        },*/
+                        controller: ['$scope'/*, 'item'*/, function($scope/*, item*/) {
+                          $scope.dismiss = function() {
+                            $scope.$dismiss();
+                          };
+
+                          $scope.save = function() {
+                            //item.update().then(function() {
+                              $scope.$close(true);
+                            //});
+                          };
+                        }]
+                    }).result.then(function(result) {
+                        if (result) {
+                            return $state.transitionTo('home');
+                        }
+                    });
+                }
+            })
             .state('config', {
                 url: '/config',
                 templateUrl: 'views/config.html',
@@ -32,6 +58,16 @@ angular.module('snifferApp').config(['$stateProvider', '$urlRouterProvider',
                 url: '/data',
                 templateUrl: 'views/data.html',
                 controller: 'DataController'
+            })
+            .state('search', {
+                url: '/search',
+                templateUrl: 'views/search.html',
+                controller: 'SearchController'
+            })
+            .state('debug', {
+                url: '/debug',
+                templateUrl: 'views/debug.html',
+                controller: 'DebugController'
             });
     }
 ]);

@@ -11,8 +11,8 @@ var config          = require('./config');
 
 var SerialListener = function() {
 
-    this.tempBuffer = new Buffer(69); // 3 packets of 23
-    this.dataIn = 0;
+    //this.tempBuffer = new Buffer(69); // 3 packets of 23
+    //this.dataIn = 0;
 
     var self = this;
     this.setup(function(err, serial) {
@@ -30,50 +30,99 @@ var SerialListener = function() {
 
 util.inherits(SerialListener, events.EventEmitter);
 
-/*
-var parsePackets = function(emitter, buffer) {
-    if(buffer.length === 23) {
-        dataIn = 0;
-        emitter.emit('data', buffer);
-    } else {
-        if(dataIn > 0) {
-            if(dataIn + buffer.length === 23) {
-                buffer.copy(tempBuffer, dataIn);
-                emitter.emit('data', tempBuffer);
-            } else {
-                logger.warn('Packet loss? : '+dataIn+' and '+buffer.length);
-            }
-            dataIn = 0;
-        } else if (buffer.length > 23) {
-            dataIn = 0;
-            logger.debug(buffer.length+' byte packet received. Ignoring for now.');
-        } else {
-            buffer.copy(tempBuffer);
-            dataIn = buffer.length;
-        }
-    }
-};
-*/
-
 SerialListener.prototype.setup = function(callback) {
     var self = this;
+    var newTempBuffer = new Buffer(0);
+
+    var parsePackets = function(emitter, buffer) {
+        // packet structure:
+        // timestamp(4), space(1), length(1), command(1), IMEI(8), signature(2), payload(5/21/37), lf(1)
+        // preamble(6) + length + lf(1) i.e 7+length
+        if(newTempBuffer.length > 0) {
+            var temp = Buffer.concat([newTempBuffer, buffer]);
+            if(_.contains(temp, 32) && _.contains(temp, 10)) { // space and LF
+                if(temp.length === (temp.readUInt8(5)+7)) {
+                    logger.trace('Sending joined packet ('+newTempBuffer.length+'+'+buffer.length+')');
+                    emitter.emit('data', temp);
+                    newTempBuffer.length = 0;
+                } else {
+                    var outPackets = [];
+                    var lastPktEnd = 0;
+                    var lastPktStart = 0;
+                    _.each(temp, function(value, index) { // check for joined packets
+                        //logger.trace('Value: '+value+' Index:'+index);
+                        if(value === 32) {
+                            var pktLen = index + temp[index+1] + 2; // offset + length byte + length + lf
+                            if(pktLen < temp.length) {
+                                if(temp[pktLen] === 10) { // this is a packet
+                                    lastPktEnd = pktLen+1;
+                                    lastPktStart = index-4;
+                                    // buf.slice([start], [end])
+                                    outPackets.push(temp.slice(lastPktStart, lastPktEnd));
+                                }
+                            }
+                        }
+                    });
+
+                    if(outPackets.length > 0) {
+                        _.each(outPackets, function(item, index) {
+                            logger.trace('Sending split packet '+(index+1)+' of '+outPackets.length+' '+item.toString('hex'));
+                            emitter.emit('data', item);
+                        });
+                        if(lastPktEnd === temp.length) { // complete
+                            newTempBuffer.length = 0;
+                            logger.trace('Data complete. Resetting('+newTempBuffer.length+')');
+                        } else { // save for next time
+                            newTempBuffer = temp.slice(lastPktStart, temp.length);
+                            logger.trace('lastPktEnd: '+lastPktEnd+' lastPktStart: '+lastPktStart+' tempLen: '+temp.length);
+                            logger.trace('Data left over. ('+newTempBuffer.length+') '+newTempBuffer.toString('hex'));
+                        }
+                    } else {
+                        //encoding: ascii utf8 utf16le ucs2 base64 binary hex
+                        //More: http://nodejs.org/api/buffer.html#buffer_buffer
+                        logger.warn('Invalid packet('+temp.length+'). Dropping. '+temp.toString('hex'));
+                        newTempBuffer.length = 0;
+                    }
+                }
+            }
+        } else {
+            if(buffer.length > 22) { // might need to check config.device.band for min size
+                if(_.contains(buffer, 32) && _.contains(buffer, 10)) { // space and LF
+                    if(buffer.length === (buffer.readUInt8(5)+7)) { // standalone good packet
+                        emitter.emit('data', buffer);
+                        newTempBuffer.length = 0;
+                    } else { // probably multiple packets
+                        newTempBuffer = Buffer.concat([newTempBuffer, buffer]);
+                        logger.trace('Saving part packet (+'+buffer.length+')');
+                    }
+                } else { // part of packet
+                    newTempBuffer = Buffer.concat([newTempBuffer, buffer]);
+                    logger.trace('Saving part packet (+'+buffer.length+')');
+                }
+            } else { // packet too small
+                newTempBuffer = Buffer.concat([newTempBuffer, buffer]);
+                logger.trace('Saving part packet (+'+buffer.length+')');
+            }
+        }
+    };
+    /*
     var parseSmarter = function(emitter, buffer) {
         if((buffer[4] === 32) && (buffer[buffer.length-1] === 10)) {
             emitter.emit('data', buffer);
             self.dataIn = 0;
         } else {
-            if(buffer[4] === 32) {
+            if(buffer[4] === 32) {  // Start of packet
                 buffer.copy(self.tempBuffer);
                 self.dataIn = buffer.length;
-            } else if (buffer[buffer.length-1] === 10) {
-                if(self.dataIn > 0) {
+            } else if (buffer[buffer.length-1] === 10) { // End of packet
+                if(self.dataIn > 0) { // previous data
                     if((self.dataIn + buffer.length) < self.tempBuffer.length) {
                         logger.trace('Copying '+buffer.length+' bytes at '+self.dataIn);
                         buffer.copy(self.tempBuffer, self.dataIn);
                         self.dataIn += buffer.length;
                         if((self.dataIn > 23) && (self.dataIn%23 === 0)) { // overlapping packets ?
                             logger.debug('Joined packets. Splitting into '+self.dataIn/23);
-                            _.each(_.range(self.dataIn/23), function(item) {
+                            _.times(self.dataIn/23, function(item) {
                                 emitter.emit('data', self.tempBuffer.slice(item*23,(item+1)*23));
                             });
                         } else {
@@ -99,6 +148,7 @@ SerialListener.prototype.setup = function(callback) {
             }
         }
     };
+    */
     // Just set the first available port
     sp.list(function(err, ports) {
         if(err) {
@@ -108,7 +158,7 @@ SerialListener.prototype.setup = function(callback) {
             config.device.portName = config.device.ports[0].comName;
             logger.info('Serial port '+config.device.portName+' selected.');
             var serialPort = new SerialPort(config.device.portName, {
-                parser      : parseSmarter, //parsePackets,
+                parser      : parsePackets, //parseSmarter, //
                 baudrate    : config.device.baud,
                 dataBits    : 8,
                 parity      : 'none',
@@ -127,7 +177,7 @@ SerialListener.prototype.setup = function(callback) {
                         //serialPort.write('$25'+config.band+'\r\n');
                         //serialPort.flush();
                         logger.info(config.device.portName + ' open serial communication. Listening on '+config.bandTypes[config.device.band]+' band.');
-                        self.dataIn = 0;
+                        //self.dataIn = 0;
                         config.device.state = 'open';
                     }
                 }
@@ -138,7 +188,7 @@ SerialListener.prototype.setup = function(callback) {
                     logger.warn('err ' + err);
                 } else {
                     config.device.state = 'closed';
-                    self.dataIn = 0;
+                    //self.dataIn = 0;
                 }
             });
 
@@ -170,7 +220,7 @@ SerialListener.prototype.setup = function(callback) {
                                     packet.hardware = data.readUInt32LE(7, true) + Math.pow(2,32)*data.readUInt32LE(11, true); // 64bits LSB First
                                     packet.payload = data.slice(17, total);
                                 } else {
-                                    logger.warn('Checksum not found. Logging as hardware 0.');
+                                    logger.warn('Checksum not found. Logging as hardware 0. Command: '+packet.command);
                                     packet.payload = data.slice(7, total);
                                 }
                             } else { // Click

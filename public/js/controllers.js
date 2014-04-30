@@ -39,13 +39,13 @@ angular.module('snifferApp.controllers', []).
 	        	var found = false;
 	        	angular.forEach($scope.dataset, function(value, key) {
 	        		if(data.hardware === value.hardware) { // update
-	        			console.log('Update '+data.hardware);
+	        			//console.log('Update '+data.hardware);
 	        			angular.copy(data, value);
 	        			found = true;
 	        		}
 				});
 	        	if(!found) { // add
-	        		console.log('Add '+data.hardware);
+	        		//console.log('Add '+data.hardware);
 	        		$scope.dataset.push(data);
 	        	}
 	        }
@@ -90,4 +90,68 @@ angular.module('snifferApp.controllers', []).
 		socket.on('device:status', function(data) {
 
 		});
-	}]);
+	}]).
+	controller('SearchController', ['$scope', 'socket', function($scope, socket) {
+    	$scope.footer = 'Search from database';
+    	$scope.alerts = [];
+
+    	$scope.closeAlert = function(index) {
+    		$scope.alerts.splice(index, 1);
+  		};
+
+    	$scope.getPackets = function() {
+    		socket.emit('packets:get', {hardware: $scope.imei, hide: $scope.hide});
+    	};
+
+    	socket.on('packets', function(data) {
+    		$scope.packets = data;
+		});
+
+		socket.on('packets:error', function(data) {
+    		$scope.alerts.push({type: 'danger', msg: JSON.stringify(data)});
+		});
+    }]).
+    controller('DebugController', ['$scope', 'socket', function($scope, socket) {
+    	$scope.header = 'Debug Monitoring';
+    	$scope.footer = 'SmartBeacon Debugging';
+    	$scope.paused = false;
+    	$scope.hardwares = [];
+    	$scope.hardware = 'IMEI';
+    	$scope.monitored = [];
+    	$scope.dataLen = 10;
+    	$scope.alerts = [];
+
+		$scope.closeAlert = function(index) {
+    		$scope.alerts.splice(index, 1);
+  		};
+
+  		$scope.addMonitor = function() {
+  			var newMon = {
+  				hardware: $scope.hardware,
+  				data: []
+  			};
+  			$scope.monitored.push(newMon);
+  		};
+
+  		$scope.removeMonitor = function(index) {
+    		$scope.monitored.splice(index, 1);
+    	};
+
+    	socket.on('serial:data', function(data) {
+    		if($scope.hardwares.indexOf(data.hardware) === -1) {
+    			//console.log(data.hardware+' seen');
+    			$scope.hardwares.push(data.hardware);
+    		}
+
+        	if(!$scope.paused) {
+        		angular.forEach($scope.monitored,  function(value, key) {
+        			if(data.hardware === value.hardware) {
+        				value.data.push(data);
+        				if(value.data.length > $scope.dataLen) {
+        					value.data.splice(0, 1); // cut the oldest
+        				}
+        			}
+        		});
+        	}
+        });
+    }]);

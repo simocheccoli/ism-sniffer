@@ -5,7 +5,7 @@
 // Demonstrate how to register services
 // In this case it is a simple value service.
 angular.module('snifferApp.services', []).
-	value('version', '0.0.2').
+	value('version', '0.0.3').
 	factory('socket', ['socketFactory', function (socketFactory) {
 		var mySocket = socketFactory();
 		mySocket.forward('error');

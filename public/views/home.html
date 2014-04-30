@@ -1,3 +1,4 @@
+<div class="container">
 <div class="jumbotron text-center">
 
     <div class="panel panel-primary">
@@ -69,48 +70,39 @@
             		<div class="input-group">
         				<span class="input-group-addon">Search</span>
         				<!-- <input type="text" class="form-control" ng-model="fIMEI"> -->
-        				<input type="text" ng-model="fIMEI" placeholder="Search string" typeahead="state as state.hardware for state in dataset | filter:{hardware:$viewValue} | limitTo:10" class="form-control">
+        				<input type="text" ng-model="fIMEI" placeholder="Search string" typeahead="state as state.hardware for state in dataset | filter:{hardware:$viewValue}" class="form-control">
     				</div>
 				</div>
 				<div class="col-lg-4">
-					<div class="dropdown">
-  						<a class="dropdown-toggle" ng-click="hardwares = _.pluck(dataset, 'hardware')">click {{hardware}}</a>
-  						<ul class="dropdown-menu">
-    						<li ng-repeat="h in hardwares">
-      							<a ng-click="hardware = h">{{h}}</a>
-    						</li>
-  						</ul>
-					</div>
+					<a ui-sref="home.info" type="button" class="btn btn-primary">Show Modal</a>
 				</div>
     		</div> <!-- /.row -->
-    		<div class="row top-buffer">
-	            <table class="table table-striped table-condensed table-hover">
-	            	<thead>
-	            		<tr>
-	            			<!--<th class="text-center" style="width:10%">#</th>-->
-	            			<th class="text-center" style="width:20%">
-	            				<a class="icon-sort" href="" ng-click="predicate='hardware'; reverse=!reverse">Hardware ID&nbsp;</a>
-	            				<span class="glyphicon glyphicon-sort"></span>
-							</th>
-	            			<th class="text-center" style="width:30%">
-	            				<a href="" ng-click="predicate='logged'; reverse=!reverse">Last Packet&nbsp;</a>
-	            				<span class="glyphicon glyphicon-sort"></span>
-	            			</th>
-	            			<th class="text-center" style="width:10%">Command</th>
-	            			<th class="text-center" style="width:50%">Status</th>
-	            		</tr>
-	            	</thead>
-	            	<tbody ng-repeat="i in dataset | filter:fIMEI | orderBy:predicate:reverse | limitTo:20" ng-click="showData($index)">
-	            		<tr ng-class-even="'default'">
-	            			<td>{{i.hardware}}</td>
-	            			<td>{{i.logged | date:'MMM d, y h:mm:ss.sss a'}}</td>
-	            			<td>{{i.command}}</td>
-	            			<td>{{i | packet}}</td>
-	            		</tr>
-	            	</tbody>
-				</table>
-			</div> <!-- /.row -->
-            <!--<textarea scroll-glue class="form-control" rows="25" ng-model="sniffer" ng-disabled="true" ></textarea>-->
+    		<table class="table table-striped table-condensed table-hover top-buffer">
+            	<thead>
+            		<tr>
+            			<!--<th class="text-center" style="width:10%">#</th>-->
+            			<th class="text-center" style="width:20%">
+            				<a class="icon-sort" href="" ng-click="predicate='hardware'; reverse=!reverse">Hardware ID&nbsp;</a>
+            				<span class="glyphicon glyphicon-sort"></span>
+						</th>
+            			<th class="text-center" style="width:30%">
+            				<a href="" ng-click="predicate='logged'; reverse=!reverse">Last Packet&nbsp;</a>
+            				<span class="glyphicon glyphicon-sort"></span>
+            			</th>
+            			<th class="text-center" style="width:10%">Command</th>
+            			<th class="text-center" style="width:50%">Status</th>
+            		</tr>
+            	</thead>
+            	<tbody ng-repeat="i in dataset | filter:fIMEI | orderBy:predicate:reverse | limitTo:20" ng-click="showData($index)">
+            		<tr ng-class-even="'bg-default'">
+            			<td>{{i.hardware}}</td>
+            			<td>{{i.logged | date:'MMM d, y h:mm:ss.sss a'}}</td>
+            			<td>{{i.command}}</td>
+            			<td>{{i | packet}}</td>
+            		</tr>
+            	</tbody>
+			</table>
+			<!--<textarea scroll-glue class="form-control" rows="25" ng-model="sniffer" ng-disabled="true" ></textarea>-->
             <!-- <div class="row" >
             	<div ng-repeat="packet in dataset.rx">{{packet.toString()}}</div>
             	<div ng-repeat="rssi in dataset.rssi">{{rssi}}</div>
@@ -127,4 +119,5 @@
 
         <div class="panel-footer">{{footer}}</div>
     </div>
+</div>
 </div>
