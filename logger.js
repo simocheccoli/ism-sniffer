@@ -12,6 +12,17 @@ var customColors = {
   fatal: 'red'
 };
 
+var pad2 = function(n) { return n<10 ? '0'+n : ''+n; };
+var pad3 = function(n) {
+  if(n>99) {
+    return ''+n;
+  } else if (n>9) {
+    return '0'+n;
+  } else {
+    return '00'+n;
+  }
+};
+
 var logger = new (winston.Logger)({
   colors: customColors,
   levels: {
@@ -24,16 +35,20 @@ var logger = new (winston.Logger)({
   },
   transports: [
     new (winston.transports.Console)({
-      level: 'trace',
+      level: 'debug', //trace',
       colorize: true,
-      timestamp: true
-      /*timestamp: function() {
-        return new Date().toUTCString();
-      }*/
+      //timestamp: true
+      timestamp: function() {
+        var d = new Date();
+        /* dd/mm/yyyy HH:MM:SS.sss */
+        return pad2(d.getDate())+'/'+pad2(d.getMonth()+1)+'/'+d.getFullYear()+' '+d.toLocaleTimeString()+'.'+pad3(d.getMilliseconds());
+        /* yyyy-mm-dd HH:MM:SS.sss */
+        //return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())+' '+d.toLocaleTimeString()+'.'+pad3(d.getMilliseconds());
+      }
     })/*,
-    new (winston.transports.File)({ 
+    new (winston.transports.File)({
       filename: 'data.log',
-      handleExceptions: true 
+      handleExceptions: true
     })*/
   ]
 });

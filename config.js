@@ -38,7 +38,6 @@ module.exports = {
 	    0x82: 'SB_PROTOCOL_CMD_SET_PERIOD',
 	    0x83: 'SB_PROTOCOL_CMD_REQUEST_REPORT',
 	    0x84: 'SB_PROTOCOL_CMD_RCVD_REPORT_ACK',
-
 	    0x90: 'SB_PROTOCOL_CMD_SET_RF_ONLY_MODE_1',
 	    0x91: 'SB_PROTOCOL_CMD_SET_RF_ONLY_MODE_2',
 	    0x92: 'SB_PROTOCOL_CMD_SET_TRACKER_MODE_1',
@@ -54,12 +53,10 @@ module.exports = {
 	    0xA7: 'CLIP_PROTOCOL_CMD_Request_Self_Test',
 	    0xA8: 'CLIP_PROTOCOL_CMD_Request_Enter_FlightMode',
 	    0xA9: 'CLIP_PROTOCOL_CMD_Request_DK_FW_Version',
-
 	    0xB0: 'CLIP_PROTOCOL_CMD_OTA_Upgrade_Start',
 	    0xB1: 'CLIP_PROTOCOL_CMD_Flash_Write',
 	    0xB2: 'CLIP_PROTOCOL_CMD_Check_FW_CRC',
 	    0xB3: 'CLIP_PROTOCOL_CMD_Activate_New_FW',
-
 	    0xC0: 'CLIP_PROTOCOL_CMD_DOCK_REPEAT_UP',
 	    0xC1: 'CLIP_PROTOCOL_CMD_DOCK_REPEAT_DOWN',
 
@@ -70,7 +67,9 @@ module.exports = {
 	    0xD7: 'DOCK_PROTOCOL_CMD_Return_FW_Write_Ack',
 	    0xD8: 'DOCK_PROTOCOL_CMD_Factory_RSSI_Req',
 	    0xD9: 'DOCK_PROTOCOL_CMD_Factory_RSSI_Rsp',
-	    0xDA: 'DOCK_PROTOCOL_CMD_Return_FW_Version'
+	    0xDA: 'DOCK_PROTOCOL_CMD_Return_FW_Version',
+
+	    0xFE: 'ISM_REQUEST_ALLOWED'
 	},
 	bandTypes: {
     	0x01: 'EU_CLIP',

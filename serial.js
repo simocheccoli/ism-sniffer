@@ -174,7 +174,7 @@ SerialListener.prototype.setup = function(callback) {
                         logger.warn('Port already open');
                     } else {
                         logger.debug('Sending $25'+config.device.band+' to serial port.');
-                        //serialPort.write('$25'+config.band+'\r\n');
+                        serialPort.write('$25'+config.band+'\r\n');
                         //serialPort.flush();
                         logger.info(config.device.portName + ' open serial communication. Listening on '+config.bandTypes[config.device.band]+' band.');
                         //self.dataIn = 0;
@@ -211,22 +211,54 @@ SerialListener.prototype.setup = function(callback) {
                         packet.command = data.readUInt8(6);
                         packet.rf_band = config.device.band;
 
-                        if(packet.command === 0) { // cmd(1), flags(1), from(4), time(4)
-                            packet.hardware = data.readUInt32LE(8, true);
-                            packet.payload = data.slice(12, total);
-                        } else {
-                            if(config.device.band>2) { // Colorado
+                        if((packet.command > 0) && (packet.command < 17)) {
+                            packet.product = 'Tag';
+                        } else if ((packet.command >= 17) && (packet.command < 31)) {
+                            packet.product = 'Wristband';
+                        } else if ((packet.command >= 69) && (packet.command < 128)) {
+                            packet.product = 'RF Debug';
+                        } else if ((packet.command >= 128) && (packet.command < 160)) {
+                            packet.product = 'SmartBeacon';
+                        } else if ((packet.command >= 160) && (packet.command < 208)) {
+                            packet.product = 'Clip';
+                        } else if ((packet.command >= 208) && (packet.command < 230)) {
+                            packet.product = 'Dock';
+                        }
+
+                        switch(packet.command) {
+                            case 0:   // ISM_REQUEST_BROADCAST
+                                packet.hardware = data.readUInt32LE(8, true); // cmd(1), flags(1), from(4), time(4)
+                                packet.payload = data.slice(7, total);
+                                break;
+
+                            case 1:   // could be RF_TAG_PROTOCOL_CMD_PERIODIC or ISM_REQUEST_ALLOWED
                                 if((data[15] === 85) && (data[16] === 170)) {
                                     packet.hardware = data.readUInt32LE(7, true) + Math.pow(2,32)*data.readUInt32LE(11, true); // 64bits LSB First
                                     packet.payload = data.slice(17, total);
                                 } else {
-                                    logger.warn('Checksum not found. Logging as hardware 0. Command: '+packet.command);
+                                    packet.command = 254; // reassign because of overlap
+                                    packet.hardware = data.readUInt32LE(8, true); // cmd(1), flags(1), from(4), time(4)
                                     packet.payload = data.slice(7, total);
                                 }
-                            } else { // Click
-                                packet.hardware = data.readUInt32LE(8, true); // WB_ID
-                                packet.payload = data.slice(16, total);
-                            }
+                                break;
+
+                            case 128: // SB_PROTOCOL_CMD_TIME
+
+                            default:
+                                if(config.device.band>2) { // Colorado
+                                    if((data[15] === 85) && (data[16] === 170)) {
+                                        packet.hardware = data.readUInt32LE(7, true) + Math.pow(2,32)*data.readUInt32LE(11, true); // 64bits LSB First
+                                        packet.payload = data.slice(17, total);
+                                    } else {
+                                        logger.warn('Checksum not found. Command:'+packet.command);
+                                        logger.debug(data.toString('hex'));
+                                        packet.payload = data.slice(7, total);
+                                    }
+                                } else { // Click
+                                    packet.hardware = data.readUInt32LE(8, true); // WB_ID
+                                    packet.payload = data.slice(16, total);
+                                }
+                                break;
                         }
 
                         //data.copy(packet.payload, 0, 7, total); // buf.copy(targetBuffer, [targetStart], [sourceStart], [sourceEnd])
@@ -236,7 +268,10 @@ SerialListener.prototype.setup = function(callback) {
 
                             if(config.commandTypes[packet.command] === undefined) {
                                 logger.warn('['+packet.systick+'] new command type '+packet.command);
+                                logger.debug(data.toString('hex'));
                             } else {
+                                logger.info('['+packet.systick+'] '+config.commandTypes[packet.command]);
+                                /*
                                 switch(packet.command) {
                                     case 0:
                                         logger.info('['+packet.systick+'] '+config.commandTypes[packet.command]);
@@ -247,7 +282,7 @@ SerialListener.prototype.setup = function(callback) {
                                     default:
                                         logger.info('['+packet.systick+'] '+config.commandTypes[packet.command]+' '+packet.hardware+' '+packet.payload.length);
                                         break;
-                                }
+                                }*/
                             }
                             config.socketServer.sockets.emit('serial:data', packet);
                         });

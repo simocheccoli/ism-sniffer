@@ -16,7 +16,7 @@
 		                        <span class="caret"></span>
 		                    </button>
 		                    <ul class="dropdown-menu">
-		                        <li ng-repeat="p in config.ports"><a ng-click="config.port = p">{{p}}</a></li>
+		                        <li ng-repeat="p in config.ports"><a ng-click="config.port = p.name">{{p.name}} {{p.info}}</a></li>
 		                    </ul>
 		                </div>
 		                <input type="text" class="form-control" ng-model="config.port" disabled>

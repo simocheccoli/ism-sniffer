@@ -35,7 +35,7 @@ angular.module('snifferApp.services', []).
 
 		socket.on('config', function(data) {
 			angular.forEach(data.ports, function(value, key) {
-				config.ports.push(value.comName);
+				config.ports.push({name: value.comName, info: value.manufacturer});
 			});
 			config.baud = data.baud;
     		config.port = data.portName;
