@@ -15,7 +15,7 @@ var socketServer;
 
 function startServer()
 {
-	app.use(express.static(__dirname + '/public'));
+    app.use(express.static(__dirname + '/public'));
     app.use(bodyParser());
 
     // ROUTES FOR OUR API
@@ -94,12 +94,12 @@ function startServer()
 
     app.use('/api', router);
 
-	http.listen(config.port);
-	logger.info('Server started on port ' + config.port);
+    http.listen(config.port);
+    logger.info('Server started on port ' + config.port);
 
     mongoose.connect(config.db);
 
-	socketServer = new SocketServer(http);
+    socketServer = new SocketServer(http);
 }
 
 startServer();

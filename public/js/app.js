@@ -2,13 +2,13 @@
 
 // Declare app level module which depends on filters, and services
 angular.module('snifferApp', [
-	'ui.router',
+    'ui.router',
     'ui.bootstrap',
-	'btford.socket-io',
-	'snifferApp.filters',
-	'snifferApp.services',
-	'snifferApp.directives',
-	'snifferApp.controllers'
+    'btford.socket-io',
+    'snifferApp.filters',
+    'snifferApp.services',
+    'snifferApp.directives',
+    'snifferApp.controllers'
 ]);
 //Setting up route
 angular.module('snifferApp').config(['$stateProvider', '$urlRouterProvider',
