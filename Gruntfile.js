@@ -60,8 +60,8 @@ module.exports = function(grunt) {
                     'public/build/app.min.js': [
                         //'public/lib/angular/angular.js',
                         //'public/lib/angular-ui-router/release/angular-ui-router.js',
-						//'public/lib/angular-bootstrap/ui-bootstrap.js',
-						//'public/lib/angular-bootstrap/ui-bootstrap-tpls.js',
+												//'public/lib/angular-bootstrap/ui-bootstrap.js',
+												//'public/lib/angular-bootstrap/ui-bootstrap-tpls.js',
                         //'node_modules/socket.io/lib/socket.io.js',
                         //'public/lib/smoothie.js',
                         'public/lib/angular-socket-io/socket.js',
@@ -87,7 +87,8 @@ module.exports = function(grunt) {
                 files: {
                     'public/build/app.min.css': [
                         //'public/lib/bootstrap/dist/css/bootstrap.css',
-						'public/css/**/*.css'
+												//'public/css/app.css'
+												'public/css/**/*.css'
                     ]
                 }
             }

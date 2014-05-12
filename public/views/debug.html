@@ -11,7 +11,8 @@
             <div class="panel-body">
               <div class="col-lg-6">
                 <div class="input-group">
-                  <input type="text" ng-model="hardware" typeahead="hw for hw in config.hardwares | filter:$viewValue | limitTo:4" class="form-control">
+                  <input type="text" ng-model="hardware"
+                         typeahead="hw for hw in config.hardwares | filter:$viewValue | limitTo:4" class="form-control">
                   <span class="input-group-btn">
                     <button class="btn btn-default" type="button" ng-click="addMonitor()">Add</button>
                   </span>
@@ -37,7 +38,7 @@
                   <div ng-repeat="m in monitored">
                     <div class="row top-buffer">
                       <div class="col-lg-2" style="background-color: #1c1e22">
-                        <h4>{{m}}</h4>
+                        <h4>{{m.name}}</h4>
                       </div>
                       <div class="col-lg-2 pull-right">
                           <span class="input-group-btn">
@@ -55,7 +56,8 @@
                         </tr>
                       </thead>
                       <tbody>
-                        <tr ng-repeat='p in config.dataset | orderBy:-logged | filter:m | limitTo:dataLen'>
+                        <!-- <tr ng-repeat='p in config.dataset | orderBy:-logged | filter:m | limitTo:dataLen'> -->
+                        <tr ng-repeat='p in m.data | orderBy:-logged'>
                           <td>{{p.logged | date:'MMM d, y h:mm:ss.sss a'}}</td>
                           <td>{{p.command}}</td>
                           <td>{{p.payload | json}}</td>

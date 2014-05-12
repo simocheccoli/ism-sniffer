@@ -173,7 +173,9 @@ SerialListener.prototype.setup = function(callback) {
                     if(config.device.state !== 'closed') {
                         logger.warn('Port already open');
                     } else {
-                        logger.debug('Sending $25'+config.device.band+' to serial port.');
+                        //setTimeout(function() {
+                          logger.debug('Sending $25'+config.device.band+' to serial port.');
+                        //}, 500);
                         serialPort.write('$25'+config.band+'\r\n');
                         //serialPort.flush();
                         logger.info(config.device.portName + ' open serial communication. Listening on '+config.bandTypes[config.device.band]+' band.');
@@ -203,6 +205,7 @@ SerialListener.prototype.setup = function(callback) {
                  *  <PAYLOAD>    5/21/37  Depends on command type
                  */
                 if(data[4] === 32) { //space
+                    packet.raw = data.toString('hex');
                     // data[0:3] = 29 68 00 00 => timestamp: 0x00006829 in systicks
                     packet.systick = data[0]+Math.pow(16,2)*data[1]+Math.pow(16,4)*data[2]+Math.pow(16,8)*data[3];
                     packet.size = data.readUInt8(5);
@@ -243,7 +246,10 @@ SerialListener.prototype.setup = function(callback) {
                                 break;
 
                             case 128: // SB_PROTOCOL_CMD_TIME
-
+                            case 208: // DOCK_PROTOCOL_CMD_Dock_Status
+                                packet.hardware = data.readUInt32LE(8, true); // TARGET_WB_ID
+                                packet.payload = data.slice(12, total);
+                                break;
                             default:
                                 if(config.device.band>2) { // Colorado
                                     if((data[15] === 85) && (data[16] === 170)) {
@@ -251,7 +257,7 @@ SerialListener.prototype.setup = function(callback) {
                                         packet.payload = data.slice(17, total);
                                     } else {
                                         logger.warn('Checksum not found. Command:'+packet.command);
-                                        logger.debug(data.toString('hex'));
+                                        logger.debug(data.raw);
                                         packet.payload = data.slice(7, total);
                                     }
                                 } else { // Click
@@ -268,7 +274,7 @@ SerialListener.prototype.setup = function(callback) {
 
                             if(config.commandTypes[packet.command] === undefined) {
                                 logger.warn('['+packet.systick+'] new command type '+packet.command);
-                                logger.debug(data.toString('hex'));
+                                logger.debug(packet.raw);
                             } else {
                                 logger.info('['+packet.systick+'] '+config.commandTypes[packet.command]);
                                 /*

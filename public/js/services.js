@@ -34,6 +34,10 @@ angular.module('snifferApp.services', []).
 
         getConfig: function() {
           socket.emit('config:get');
+        },
+
+        setConfig: function() {
+          socket.emit('config:set', {port: config.port, baud: config.baud, band: config.band});
         }
       };
 

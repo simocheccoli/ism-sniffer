@@ -5,8 +5,9 @@
 angular.module('snifferApp.controllers', []).
     controller('MonitorController', ['$scope', 'socket', 'config', function($scope, socket, config) {
         $scope.footer = 'Press connect to start';
-        $scope.connected = false;
         $scope.config = config;
+        $scope.predicate = 'logged';
+        $scope.reverse = true;
 
         $scope.$on('socket:error', function (ev, data) {
             console.log('Socket error: '+ev+' : '+data);
@@ -19,7 +20,7 @@ angular.module('snifferApp.controllers', []).
         $scope.doConnect = function() {
             if(!config.connected) {
                 //console.log('Sending open');
-                socket.emit('serial:open', { baud: config.baud, port: config.port});
+                socket.emit('serial:open', { baud: config.baud, port: config.port, band: config.band });
             } else {
                 //console.log('Sending close');
                 socket.emit('serial:close', { port: config.port });
@@ -90,7 +91,7 @@ angular.module('snifferApp.controllers', []).
             $scope.alerts.push({type: 'danger', msg: JSON.stringify(data)});
         });
     }]).
-    controller('DebugController', ['$scope', function($scope) {
+    controller('DebugController', ['$scope', 'config', function($scope, config) {
         $scope.header = 'Debug Monitoring';
         $scope.footer = 'SmartBeacon Debugging';
         $scope.paused = false;
@@ -100,15 +101,34 @@ angular.module('snifferApp.controllers', []).
         $scope.alerts = [];
 
         $scope.closeAlert = function(index) {
-            $scope.alerts.splice(index, 1);
+          $scope.alerts.splice(index, 1);
         };
 
         $scope.addMonitor = function() {
-            $scope.monitored.push($scope.hardware);
+          var newMon = {
+            name: $scope.hardware,
+            data: []
+          };
+          $scope.monitored.push(newMon);
         };
 
         $scope.removeMonitor = function(index) {
-            $scope.monitored.splice(index, 1);
+          $scope.monitored.splice(index, 1);
         };
+
+        $scope.$watch(config.dataset, function(newValue, oldValue) {
+          console.log(JSON.stringify(newValue));
+          if (newValue === oldValue) { return; } // AKA first run
+          if(!$scope.paused) {
+            angular.forEach($scope.monitored,  function(value) {
+              if(newValue.hardware === value.hardware) {
+                value.data.push(newValue);
+                if(value.data.length > $scope.dataLen) {
+                  value.data.splice(0, 1); // cut the oldest
+                }
+              }
+            });
+          }
+        });
 
     }]);

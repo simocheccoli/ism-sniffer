@@ -11,6 +11,7 @@ var mongoose = require('mongoose'),
  * Packet Schema
  */
 var PacketSchema = new Schema({
+    raw      : { type: String, default: '' },
     systick  : { type: Number, default: 0 },
     logged   : { type: Date,   default: Date.now },
     size     : { type: Number, default: 0 },

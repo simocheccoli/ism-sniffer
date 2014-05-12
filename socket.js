@@ -29,6 +29,7 @@ var SocketServer = function(httpServer) {
             logger.debug('Open request at '+data.baud+' on '+data.port);
             config.device.baud = data.baud;
             config.device.portName = data.port;
+            config.device.band = data.band;
             //serialListner.setup();
             serialListner.serialPort.path = data.port;
             serialListner.serialPort.options.baudRate = data.baud;
@@ -63,7 +64,7 @@ var SocketServer = function(httpServer) {
             if(data.hide) {
                 search.command = { $gt: 1 };
             }
-            Packet.find(search, function(err, packets) {
+            Packet.find(search).sort({logged:-1}).limit(100, function(err, packets) {
                 if (err) {
                     logger.warn('Error fetching packets: '+err);
                     socket.emit('packets:error', err);

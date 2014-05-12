@@ -57,20 +57,20 @@
                         <div><span class="glyphicon glyphicon-minus"></span> Clear</div>
                     </button>
                      <button type="button" class="btn btn-primary" ng-click="doConnect()">
-                        <div ng-show="config.connected"><span class="glyphicon glyphicon-ok"></span> Connect</div>
+                        <div ng-show="!config.connected"><span class="glyphicon glyphicon-ok"></span> Connect</div>
                         <div ng-show ="config.connected"><span class="glyphicon glyphicon-remove"></span> Disconnect</div>
                     </button>
                 </div>
             </div> <!-- /.row -->
             <div class="row top-buffer">
-                <div class="col-lg-4 col-lg-offset-4"><span>Devices detected:</span> {{config.dataset.length}}</div>
+                <div class="col-lg-4 col-lg-offset-4"><span>Devices detected:</span> {{config.hardwares.length}}</div>
             </div> <!-- /.row -->
             <div class="row top-buffer">
                 <div class="col-lg-4">
                     <div class="input-group">
                         <span class="input-group-addon">Search</span>
                         <!--<input type="text" ng-model="fIMEI" placeholder="Search string" typeahead="state as state.hardware for state in config.dataset | filter:{hardware:$viewValue}" class="form-control">-->
-                        <input type="text" ng-model="fIMEI" typeahead="hw for hw in config.hardwares | filter:$viewValue | limitTo:8" class="form-control">
+                        <input type="text" ng-model="fIMEI" typeahead="item as item.hardware for item in config.dataset | filter:$viewValue | limitTo:8" class="form-control">
                     </div>
                 </div>
                 <div class="col-lg-4">
@@ -97,7 +97,7 @@
                     <tr ng-class-even="'bg-default'">
                         <td>{{i.hardware}}</td>
                         <td>{{i.logged | date:'MMM d, y h:mm:ss.sss a'}}</td>
-                        <td>{{i.command}}</td>
+                        <td>{{i.command.toString(16) | uppercase}}</td>
                         <td>{{i | packet}}</td>
                     </tr>
                 </tbody>
