@@ -11,10 +11,7 @@ var Packet          = require('./models/packet');
 var SocketServer = function(httpServer) {
     var users = [];
     this.socketServer = socketio.listen(httpServer);
-    // more config at https://github.com/LearnBoost/Socket.IO/wiki/Configuring-Socket.IO
-    //this.socketServer.set('logger', logger);
-    this.socketServer.set('log level', 1); // socket.io debug OFF
-
+    // for debug run DEBUG=socket.io* node server
     config.socketServer = this.socketServer;
 
     this.socketServer.on('connection', function (socket) {
@@ -33,16 +30,26 @@ var SocketServer = function(httpServer) {
             //serialListner.setup();
             serialListner.serialPort.path = data.port;
             serialListner.serialPort.options.baudRate = data.baud;
-            serialListner.serialPort.open();
-            if(config.device.state === 'open') {
-                socket.emit('serial:open:ok', {port: data.port});
-            }
+            serialListner.serialPort.open(function(error) {
+                if(error) {
+                    logger.warn('Error closing serial port: '+error);
+                } else {
+                    if(config.device.state === 'open') {
+                        socket.emit('serial:open:ok', {port: data.port});
+                    }
+                }
+            });
         });
 
         socket.on('serial:close', function(data) {
             logger.debug('Close request on '+data.port);
-            serialListner.serialPort.close();
-            socket.emit('serial:close:ok', {port: data.port});
+            serialListner.serialPort.close(function(error) {
+                if(error) {
+                    logger.warn('Error closing serial port: '+error);
+                } else {
+                    socket.emit('serial:close:ok', {port: data.port});
+                }
+            });
         });
 
         socket.on('config:get', function() {
