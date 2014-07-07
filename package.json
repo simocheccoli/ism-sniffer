@@ -26,13 +26,13 @@
   "dependencies": {
     "forever": "^0.11.1",
     "lodash": "^2.4.1",
-    "socket.io": "^1.0.4",
+    "socket.io": "^1.0.6",
     "serialport": "^1.4.0",
-    "express": "^4.4.1",
+    "express": "^4.5.0",
     "winston": "^0.7.3",
-    "smoothie": "^1.23.0",
-    "mongoose": "^3.8.12",
-    "body-parser": "^1.3.0"
+    "smoothie": "^1.24.0",
+    "mongoose": "^3.9.0",
+    "body-parser": "^1.4.3"
   },
   "devDependencies": {
     "grunt-concurrent": "latest",
