@@ -20,7 +20,8 @@
     "globals": { // Globals variables.
         "angular": true,
         "SmoothieChart": true,
-        "TimeSeries": true
+        "TimeSeries": true,
+        "io": true
     },
     "predef": [ // Extra globals.
         "define",

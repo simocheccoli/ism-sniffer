@@ -7,8 +7,7 @@ A [Node.js](http://nodejs.org/) application for sniffing ISM packets. This proje
 ## Prerequisites
 * [Node.js](http://www.nodejs.org/download/)
 * [MongoDB](http://docs.mongodb.org/manual/installation/)
-* [Bower](http://bower.io/)
-* [Grunt](http://gruntjs.com)
+* [Gulp](http://gulpjs.com/)
 
 ### Packages used
 * [Express](http://expressjs.com/)
@@ -18,18 +17,11 @@ A [Node.js](http://nodejs.org/) application for sniffing ISM packets. This proje
 * [Twitter Bootstrap](http://getbootstrap.com/)
 * [UI Bootstrap](http://angular-ui.github.io/bootstrap/)
 
-## Install [![Built with Grunt](https://cdn.gruntjs.com/builtwith.png)](http://gruntjs.com/)
-
-Grunt and bower required so install with
-
-	$ npm install -g grunt-cli bower
-
-Otherwise everything can installed with
-
-	$ npm install
-
-## Run
-Just run with grunt or npm start
-
+## Install
+```bash
+$ npm install -g gulp
+$ npm install
+$ gulp build
+```
 ## License
 [The MIT License](http://opensource.org/licenses/MIT)

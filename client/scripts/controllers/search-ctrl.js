@@ -2,15 +2,13 @@
  * @ngdoc controller
  * @name ng.controller:SearchController
  * @requires $scope
- * @requires socket
  * @description
  * Controller to search for data
  */
 angular.module('snifferApp')
 .controller('SearchController', [
   '$scope',
-  'socket',
-function($scope, socket) {
+function($scope) {
   'use strict';
 
   $scope.footer = 'Search from database';
@@ -21,14 +19,14 @@ function($scope, socket) {
     };
 
   $scope.getPackets = function() {
-      socket.emit('packets:get', {hardware: $scope.imei, hide: $scope.hide});
+      $scope.$emit('packets:get', {hardware: $scope.imei, hide: $scope.hide});
   };
 
-  socket.on('packets', function(data) {
+  $scope.$on('packets', function(data) {
       $scope.packets = data;
   });
 
-  socket.on('packets:error', function(data) {
+  $scope.$on('packets:error', function(data) {
       $scope.alerts.push({type: 'danger', msg: JSON.stringify(data)});
   });
 }]);

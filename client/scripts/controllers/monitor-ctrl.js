@@ -2,7 +2,7 @@
  * @ngdoc controller
  * @name ng.controller:MonitorController
  * @requires $scope
- * @requires socket
+ * @requires $log
  * @requires config
  * @description
  * Controller for serial data monitoring
@@ -10,19 +10,15 @@
 angular.module('snifferApp')
 .controller('MonitorController', [
   '$scope',
-  'socket',
+  '$log',
   'config',
-function($scope, socket, config) {
+function($scope, $log, config) {
   'use strict';
 
   $scope.footer = 'Press connect to start';
   $scope.config = config;
   $scope.predicate = 'logged';
   $scope.reverse = true;
-
-  $scope.$on('socket:error', function (ev, data) {
-      console.log('Socket error: '+ev+' : '+data);
-  });
 
   /**
    * @ngdoc method
@@ -44,27 +40,27 @@ function($scope, socket, config) {
    */
   $scope.doConnect = function() {
       if(!config.connected) {
-          //console.log('Sending open');
-          socket.emit('serial:open', { baud: config.baud, port: config.port, band: config.band });
+          //$log.debug('Sending open');
+          $scope.$emit('serial:open', { baud: config.baud, port: config.port, band: config.band });
       } else {
-          //console.log('Sending close');
-          socket.emit('serial:close', { port: config.port });
+          //$log.debug('Sending close');
+          $scope.$emit('serial:close', { port: config.port });
       }
   };
 
   $scope.showData = function(index) {
-      console.log(index+' clicked. '+JSON.stringify(config.dataset[index]));
+      $log.debug(index+' clicked. '+JSON.stringify(config.dataset[index]));
   };
 
-  socket.on('serial:close:ok', function(data) {
+  $scope.$on('serial:close:ok', function(data) {
       config.connected = false;
       $scope.footer = 'Press connect to start';
-      console.log(data.port+' closed ok');
+      $log.debug(data.port+' closed ok');
   });
-  socket.on('serial:open:ok', function(data) {
+  $scope.$on('serial:open:ok', function(data) {
       config.connected = true;
       $scope.footer = 'Device connected to ' + config.port;
-      console.log(data.port+' opened ok');
+      $log.debug(data.port+' opened ok');
   });
   /*
   $scope.smoothie = new SmoothieChart();

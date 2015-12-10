@@ -2,15 +2,14 @@
  * @ngdoc controller
  * @name ng.controller:DataController
  * @requires $scope
- * @requires socket
  * @description
- * Controller to view data 
+ * Controller to view data
  */
 angular.module('snifferApp')
 .controller('DataController', [
   '$scope',
-  'socket',
-function($scope, socket) {
+  '$log',
+function($scope, $log) {
   'use strict';
 
   $scope.footer = 'Enter device number to query';
@@ -19,10 +18,12 @@ function($scope, socket) {
   $scope.right = false;
 
   $scope.getStatus = function() {
-    socket.emit('device:get', $scope.imei);
+    $scope.$emit('device:get', $scope.imei); // firing an event upwards
   };
 
-  socket.on('device:status', function(data) {
-    console.log(JSON.stringify(data));
+  //$scope.$root.$on('device:status', function(data) {
+  $scope.$on('device:status', function(event, data) {
+    //if(!$scope.listening) { event.stopPropagation(); }
+    $log.debug(JSON.stringify(data));
   });
 }]);

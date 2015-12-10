@@ -2,6 +2,7 @@
  * @ngdoc controller
  * @name ng.controller:DebugController
  * @requires $scope
+ * @requires $log
  * @requires config
  * @description
  * Controller for debugging
@@ -9,8 +10,9 @@
 angular.module('snifferApp')
 .controller('DebugController', [
   '$scope',
+  '$log',
   'config',
-function($scope, config) {
+function($scope, $log, config) {
   'use strict';
 
   $scope.header = 'Debug Monitoring';
@@ -38,7 +40,7 @@ function($scope, config) {
   };
 
   $scope.$watch(config.dataset, function(newValue, oldValue) {
-    console.log(JSON.stringify(newValue));
+    $log.debug(JSON.stringify(newValue));
     if (newValue === oldValue) { return; } // AKA first run
     if(!$scope.paused) {
       angular.forEach($scope.monitored,  function(value) {
